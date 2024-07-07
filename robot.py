@@ -20,6 +20,7 @@ from base.func_xinghuo_web import XinghuoWeb
 from configuration import Config
 from constants import ChatType
 from job_mgmt import Job
+import requests
 
 __version__ = "39.0.10.1"
 
@@ -82,6 +83,50 @@ class Robot(Job):
         :return: 处理状态，`True` 成功，`False` 失败
         """
         return self.toChitchat(msg)
+   
+    def queryWeather(self, address: str) -> bool:
+        """查询天气
+        """
+        response = requests.get('https://xiaoapi.cn/API/tq.php?msg=' + address + '&n=1')    
+        return response.text
+   
+    def weiboReSou(self) -> bool:
+        """微博热搜
+        """
+        response = requests.get('https://xiaoapi.cn/API/resou.php?type=weibo')
+        return response.text
+   
+    def magicCommand(self, msg: WxMsg) -> bool:
+        """魔法指令或成语
+        :param msg: 微信消息结构
+        :return: 处理状态，`True` 成功，`False` 失败
+        """
+        magicCommandHelp="""目前支持的魔法指令：
+*查询天气* 格式：/{地名}天气
+*查询微博热搜* 格式：/热搜
+        """
+        status = False
+        texts = re.findall(r"^([/])(.*)$", msg.content)
+        # [('/', '苏州天气')]
+        if texts:
+            flag = texts[0][0]
+            text = texts[0][1]
+            if flag == "/":  # 魔法指令
+                if text:
+                    if text.endswith("天气") :
+                        address = text.replace("天气", "")
+                        rsp = self.queryWeather(address)
+                    elif text.endswith("热搜") :
+                        rsp = self.weiboReSou()
+                    else :
+                        self.sendTextMsg(magicCommandHelp, msg.roomid)
+                    
+                    if rsp:
+                        self.sendTextMsg(rsp, msg.roomid)
+                        status = True
+            else:
+                self.toChengyu(msg)
+        return status
 
     def toChengyu(self, msg: WxMsg) -> bool:
         """
@@ -149,7 +194,7 @@ class Robot(Job):
                 self.toAt(msg)
 
             else:  # 其他消息
-                self.toChengyu(msg)
+                self.magicCommand(msg)
 
             return  # 处理完群聊信息，后面就不需要处理了
 
@@ -162,6 +207,7 @@ class Robot(Job):
 
         elif msg.type == 0x01:  # 文本消息
             # 让配置加载更灵活，自己可以更新配置。也可以利用定时任务更新。
+            # if msg.sender == "wxid_prinwztewjj422":
             if msg.from_self():
                 if msg.content == "^更新$":
                     self.config.reload()
@@ -181,6 +227,10 @@ class Robot(Job):
     def enableRecvMsg(self) -> None:
         self.wcf.enable_recv_msg(self.onMsg)
 
+    def test(self) -> None:
+        self.wcf.send_text(f"ADD @写程序的保险规划师  @","53512817922@chatroom","wxid_2sgby07xtcun22")
+        # self.wcf.send_text(f"ADD @写程序的保险规划师  @","52597310175@chatroom","wxid_prinwztewjj422")
+ 
     def enableReceivingMsg(self) -> None:
         def innerProcessMsg(wcf: Wcf):
             while wcf.is_receiving_msg():
