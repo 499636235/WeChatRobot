@@ -190,6 +190,11 @@ class Robot(Job):
             if msg.roomid not in self.config.GROUPS:  # 不在配置的响应的群列表里，忽略
                 return
 
+             # 如果没有获取到自己的wxid
+            if self.wxid != '':
+                self.LOG.info('self.wxid为空！！！' + self.wxid)
+                return
+            
             if msg.is_at(self.wxid):  # 被@
                 self.toAt(msg)
 
