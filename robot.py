@@ -348,9 +348,10 @@ class Robot(Job):
         self.idSeq = self.idSeq+1
 
     def removeReminder(self, msg: WxMsg) -> None:
-        for sr in self.strongReminder_list:
+        for i in (self.strongReminder_list):
+            sr = self.strongReminder_list[i-1]
             if sr["id"] == msg.content.replace("停止提醒", ""):
-                self.strongReminder_list.remove(sr)
+                del self.strongReminder_list[i-1]
                 break
 
                 
