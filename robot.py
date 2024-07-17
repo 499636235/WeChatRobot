@@ -344,7 +344,7 @@ class Robot(Job):
                 self.sendTextMsg(sr["msg"], receiver)
 
     def addReminder(self, msg: WxMsg) -> None:
-        self.strongReminder_list.append({"id":self.idSeq,"msg": msg.content.replace("提醒我", ""),"roomid":msg.roomid,"sender":msg.sender})
+        self.strongReminder_list.append({"id":self.idSeq+"","msg": msg.content.replace("提醒我", ""),"roomid":msg.roomid,"sender":msg.sender})
         self.idSeq = self.idSeq+1
 
     def removeReminder(self, msg: WxMsg) -> None:
