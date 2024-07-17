@@ -36,6 +36,7 @@ class Robot(Job):
         self.wxid = self.wcf.get_self_wxid()
         self.allContacts = self.getAllContacts()
         self.strongReminder_list = []
+        self.idSeq = 1
 
         if ChatType.is_in_chat_types(chat_type):
             if chat_type == ChatType.TIGER_BOT.value and TigerBot.value_check(self.config.TIGERBOT):
@@ -124,6 +125,8 @@ class Robot(Job):
                         rsp = self.weiboReSou()
                     elif text.startswith("提醒我") :
                         rsp = self.addReminder(msg)
+                    elif text.startswith("停止提醒") :
+                        rsp = self.removeReminder(msg)
                     else :
                         self.sendTextMsg(magicCommandHelp, msg.roomid)
                     
@@ -341,6 +344,13 @@ class Robot(Job):
                 self.sendTextMsg(sr["msg"], receiver)
 
     def addReminder(self, msg: WxMsg) -> None:
-        self.strongReminder_list.append({"msg": msg.content.replace("提醒我", ""),"roomid":msg.roomid,"sender":msg.sender})
+        self.strongReminder_list.append({"id":self.idSeq,"msg": msg.content.replace("提醒我", ""),"roomid":msg.roomid,"sender":msg.sender})
+        self.idSeq = self.idSeq+1
+
+    def removeReminder(self, msg: WxMsg) -> None:
+        for sr in self.strongReminder_list:
+            if sr["id"] == msg.content.replace("停止提醒", ""):
+                self.strongReminder_list.remove(sr)
+                break
 
                 
