@@ -83,7 +83,9 @@ class ChatGPT():
         if i > 10:
             print("滚动清除微信记录：" + wxid)
             # 删除多余的记录，倒着删，且跳过第一个的系统消息
-            del self.conversation_list[wxid][1]
+            del self.conversation_list[wxid][2]
+        
+        self.LOG.info(f"chat请求信息："+str(self.conversation_list[wxid]))
 
 
 if __name__ == "__main__":

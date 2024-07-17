@@ -35,6 +35,7 @@ class Robot(Job):
         self.LOG = logging.getLogger("Robot")
         self.wxid = self.wcf.get_self_wxid()
         self.allContacts = self.getAllContacts()
+        self.strongReminder_list = []
 
         if ChatType.is_in_chat_types(chat_type):
             if chat_type == ChatType.TIGER_BOT.value and TigerBot.value_check(self.config.TIGERBOT):
@@ -87,6 +88,7 @@ class Robot(Job):
     def queryWeather(self, address: str) -> bool:
         """查询天气
         """
+        self.LOG.info("查询天气位置："+ address)
         response = requests.get('https://xiaoapi.cn/API/tq.php?msg=' + address + '&n=1')    
         return response.text
    
@@ -115,9 +117,13 @@ class Robot(Job):
                 if text:
                     if text.endswith("天气") :
                         address = text.replace("天气", "")
+                        if text == "天气":
+                            address = "苏州"
                         rsp = self.queryWeather(address)
                     elif text.endswith("热搜") :
                         rsp = self.weiboReSou()
+                    elif text.startswith("提醒我") :
+                        rsp = self.addReminder(msg)
                     else :
                         self.sendTextMsg(magicCommandHelp, msg.roomid)
                     
@@ -212,9 +218,9 @@ class Robot(Job):
 
         elif msg.type == 0x01:  # 文本消息
             # 让配置加载更灵活，自己可以更新配置。也可以利用定时任务更新。
-            # if msg.sender == "wxid_prinwztewjj422":
-            if msg.from_self():
-                if msg.content == "^更新$":
+            if msg.sender == "wxid_prinwztewjj422":
+            # if msg.from_self():
+                if msg.content == "更新":
                     self.config.reload()
                     self.LOG.info("已更新")
             else:
@@ -318,3 +324,23 @@ class Robot(Job):
         news = News().get_important_news()
         for r in receivers:
             self.sendTextMsg(news, r)
+
+    def strongReminder(self) -> None:
+        self.LOG.info(self.strongReminder_list)
+        for sr in self.strongReminder_list:
+            receiver = sr["sender"]
+            if not receiver:
+                return
+            
+            if not sr["msg"]:
+                return
+            
+            if sr["roomid"]:
+                self.sendTextMsg(sr["msg"], sr["roomid"], receiver)
+            else:
+                self.sendTextMsg(sr["msg"], receiver)
+
+    def addReminder(self, msg: WxMsg) -> None:
+        self.strongReminder_list.append({"msg": msg.content.replace("提醒我", ""),"roomid":msg.roomid,"sender":msg.sender})
+
+                

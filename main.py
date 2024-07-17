@@ -16,10 +16,10 @@ def weather_report(robot: Robot) -> None:
     """
 
     # 获取接收人
-    receivers = ["filehelper"]
+    receivers = ["wxid_prinwztewjj422"]
 
     # 获取天气，需要自己实现，可以参考 https://gitee.com/lch0821/WeatherScrapy 获取天气。
-    report = "这就是获取到的天气情况了"
+    report = robot.queryWeather("苏州")
 
     for r in receivers:
         robot.sendTextMsg(report, r)
@@ -41,19 +41,21 @@ def main(chat_type: int):
 
     # 机器人启动发送测试消息
     robot.sendTextMsg("机器人启动成功！", "filehelper")
-
+    robot.sendTextMsg("机器人启动成功！", "wxid_prinwztewjj422")
     # 接收消息
     # robot.enableRecvMsg()     # 可能会丢消息？
     robot.enableReceivingMsg()  # 加队列
 
+    robot.onEverySeconds(10, robot.strongReminder)
+
     # 每天 7 点发送天气预报
-    robot.onEveryTime("07:00", weather_report, robot=robot)
+    robot.onEveryTime("07:45", weather_report, robot=robot)
 
     # 每天 7:30 发送新闻
-    robot.onEveryTime("07:30", robot.newsReport)
+    robot.onEveryTime("08:15", robot.newsReport)
 
     # 每天 16:30 提醒发日报周报月报
-    robot.onEveryTime("16:30", ReportReminder.remind, robot=robot)
+    robot.onEveryTime("16:50", ReportReminder.remind, robot=robot)
 
     # 让机器人一直跑
     robot.keepRunningAndBlockProcess()
