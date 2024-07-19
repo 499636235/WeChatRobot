@@ -35,8 +35,8 @@ class Robot(Job):
         self.LOG = logging.getLogger("Robot")
         self.wxid = self.wcf.get_self_wxid()
         self.allContacts = self.getAllContacts()
-        self.strongReminder_list = []
-        self.idSeq = 1
+        self.strongReminder_list = {}
+        self.idSeq = int(1)
 
         if ChatType.is_in_chat_types(chat_type):
             if chat_type == ChatType.TIGER_BOT.value and TigerBot.value_check(self.config.TIGERBOT):
@@ -329,8 +329,9 @@ class Robot(Job):
             self.sendTextMsg(news, r)
 
     def strongReminder(self) -> None:
-        self.LOG.info(self.strongReminder_list)
-        for sr in self.strongReminder_list:
+        for id in self.strongReminder_list:
+            sr = self.strongReminder_list[id]
+            # self.LOG.info(sr)
             receiver = sr["sender"]
             if not receiver:
                 return
@@ -344,14 +345,18 @@ class Robot(Job):
                 self.sendTextMsg(sr["msg"], receiver)
 
     def addReminder(self, msg: WxMsg) -> None:
-        self.strongReminder_list.append({"id":self.idSeq+"","msg": msg.content.replace("提醒我", ""),"roomid":msg.roomid,"sender":msg.sender})
-        self.idSeq = self.idSeq+1
+        id = str(self.idSeq)
+        self.strongReminder_list[id]={"msg": "提醒ID【"+id+"】\n"+msg.content.replace("/提醒我", ""),"roomid":msg.roomid,"sender":msg.sender}
+        self.idSeq += 1
+        self.LOG.info(self.strongReminder_list)
 
     def removeReminder(self, msg: WxMsg) -> None:
-        for i in (self.strongReminder_list):
-            sr = self.strongReminder_list[i-1]
-            if sr["id"] == msg.content.replace("停止提醒", ""):
-                del self.strongReminder_list[i-1]
-                break
+        # for i in len(self.strongReminder_list):
+        #     sr = self.strongReminder_list[i-1]
+        #     if sr["id"] == msg.content.replace("/停止提醒", ""):
+        #         del self.strongReminder_list[i-1]
+        #         break
+        del self.strongReminder_list[msg.content.replace("/停止提醒", "")]
+        self.LOG.info(self.strongReminder_list)
 
                 
